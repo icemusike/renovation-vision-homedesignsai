@@ -1,7 +1,8 @@
 import React from 'react';
-import { Download, TrendingUp, DollarSign, Percent } from 'lucide-react';
+import { Download, TrendingUp, DollarSign, Percent, Share2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { generatePDF } from '../utils/pdf';
+import { toast } from './Toast';
 
 interface ResultCardProps {
   totalCost: number;
@@ -24,6 +25,29 @@ const ResultCard: React.FC<ResultCardProps> = ({ totalCost, projectedValue, roiP
       projectedValue,
       roiPercent,
     });
+    toast.success('PDF report downloaded successfully!');
+  };
+
+  const handleShare = async () => {
+    const shareData = {
+      title: 'My Renovation Estimate',
+      text: `Check out my renovation estimate: ${formatCurrency(totalCost)} with a projected ROI of ${roiPercent}%!`,
+      url: window.location.href,
+    };
+
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+      } catch (error) {
+        console.error('Error sharing:', error);
+      }
+    } else {
+      // Fallback for browsers that don't support the Web Share API
+      navigator.clipboard.writeText(
+        `My Renovation Estimate: ${formatCurrency(totalCost)} with a projected ROI of ${roiPercent}%!`
+      );
+      toast.success('Estimate details copied to clipboard!');
+    }
   };
 
   return (
@@ -70,13 +94,23 @@ const ResultCard: React.FC<ResultCardProps> = ({ totalCost, projectedValue, roiP
           </div>
         </div>
         
-        <button
-          onClick={handleDownloadPDF}
-          className="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-xl text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 shadow-md transition-all duration-150"
-        >
-          <Download className="h-4 w-4 mr-2" />
-          Download Detailed PDF Report
-        </button>
+        <div className="grid grid-cols-2 gap-4">
+          <button
+            onClick={handleDownloadPDF}
+            className="flex justify-center items-center py-3 px-4 border border-transparent rounded-xl text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 shadow-md transition-all duration-150"
+          >
+            <Download className="h-4 w-4 mr-2" />
+            Download PDF
+          </button>
+          
+          <button
+            onClick={handleShare}
+            className="flex justify-center items-center py-3 px-4 border border-gray-300 rounded-xl text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 shadow-sm transition-all duration-150"
+          >
+            <Share2 className="h-4 w-4 mr-2" />
+            Share Estimate
+          </button>
+        </div>
       </div>
     </div>
   );

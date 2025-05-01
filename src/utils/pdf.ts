@@ -21,57 +21,118 @@ export const generatePDF = (data: PDFData) => {
   // Create new PDF document
   const doc = new jsPDF();
   
-  // Add title
-  doc.setFontSize(20);
-  doc.setTextColor(0, 0, 0);
-  doc.text('Renovation Cost Estimate Summary', 105, 20, { align: 'center' });
+  // Add title with blue color
+  doc.setFontSize(24);
+  doc.setTextColor(59, 130, 246); // Blue color
+  doc.text('Renovation Cost Estimate', 105, 20, { align: 'center' });
+  
+  // Add subtitle
+  doc.setFontSize(14);
+  doc.setTextColor(107, 114, 128); // Gray color
+  doc.text('Detailed Financial Analysis', 105, 30, { align: 'center' });
   
   // Add date
   doc.setFontSize(10);
-  doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 105, 30, { align: 'center' });
+  doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 105, 40, { align: 'center' });
   
   // Add horizontal line
-  doc.setDrawColor(200, 200, 200);
-  doc.line(20, 35, 190, 35);
+  doc.setDrawColor(229, 231, 235); // Light gray
+  doc.setLineWidth(0.5);
+  doc.line(20, 45, 190, 45);
   
-  // Add cost information
-  doc.setFontSize(14);
-  doc.text('Estimated Renovation Cost:', 20, 50);
+  // Add summary section
   doc.setFontSize(16);
-  doc.setTextColor(0, 102, 204);
-  doc.text(formatCurrency(totalCost), 190, 50, { align: 'right' });
+  doc.setTextColor(31, 41, 55); // Dark gray
+  doc.text('Investment Summary', 20, 60);
+  
+  // Add cost information with styled box
+  doc.setFillColor(243, 244, 246); // Light gray background
+  doc.roundedRect(20, 65, 170, 25, 3, 3, 'F');
+  
+  doc.setFontSize(12);
+  doc.setTextColor(107, 114, 128); // Gray
+  doc.text('Total Renovation Cost:', 30, 75);
+  
+  doc.setFontSize(14);
+  doc.setTextColor(59, 130, 246); // Blue
+  doc.text(formatCurrency(totalCost), 170, 75, { align: 'right' });
   
   // Add ROI information
+  doc.setFillColor(243, 244, 246); // Light gray background
+  doc.roundedRect(20, 95, 170, 25, 3, 3, 'F');
+  
+  doc.setFontSize(12);
+  doc.setTextColor(107, 114, 128); // Gray
+  doc.text('Return on Investment (ROI):', 30, 105);
+  
   doc.setFontSize(14);
-  doc.setTextColor(0, 0, 0);
-  doc.text('Return on Investment (ROI):', 20, 65);
-  doc.setTextColor(0, 153, 51);
-  doc.text(`${roiPercent}%`, 190, 65, { align: 'right' });
+  doc.setTextColor(16, 185, 129); // Green
+  doc.text(`${roiPercent}%`, 170, 105, { align: 'right' });
   
   // Add projected value
-  doc.setFontSize(14);
-  doc.setTextColor(0, 0, 0);
-  doc.text('Projected Added Value:', 20, 80);
-  doc.setTextColor(0, 153, 51);
-  doc.text(formatCurrency(projectedValue), 190, 80, { align: 'right' });
+  doc.setFillColor(243, 244, 246); // Light gray background
+  doc.roundedRect(20, 125, 170, 25, 3, 3, 'F');
   
-  // Add horizontal line
-  doc.setDrawColor(200, 200, 200);
-  doc.line(20, 90, 190, 90);
-  
-  // Add notes
   doc.setFontSize(12);
-  doc.setTextColor(0, 0, 0);
-  doc.text('Notes:', 20, 105);
+  doc.setTextColor(107, 114, 128); // Gray
+  doc.text('Projected Added Value:', 30, 135);
+  
+  doc.setFontSize(14);
+  doc.setTextColor(16, 185, 129); // Green
+  doc.text(formatCurrency(projectedValue), 170, 135, { align: 'right' });
+  
+  // Add recommendations section
+  doc.setFontSize(16);
+  doc.setTextColor(31, 41, 55); // Dark gray
+  doc.text('AI Recommendations', 20, 165);
+  
+  // Add recommendations
+  doc.setFillColor(237, 242, 255); // Light blue background
+  doc.roundedRect(20, 170, 170, 50, 3, 3, 'F');
+  
   doc.setFontSize(10);
-  doc.text('• This estimate is based on current market rates and may vary based on actual conditions.', 25, 115);
-  doc.text('• The ROI calculation is an estimate based on typical market returns for similar renovations.', 25, 125);
-  doc.text('• Consult with a professional contractor for a detailed quote before beginning work.', 25, 135);
+  doc.setTextColor(59, 130, 246); // Blue
+  doc.text('Budget Optimization:', 30, 180);
+  
+  doc.setFontSize(9);
+  doc.setTextColor(31, 41, 55); // Dark gray
+  
+  let recommendationText = '';
+  if (totalCost < 75000) {
+    recommendationText = 'Consider focusing on high-impact areas like kitchens and bathrooms to maximize ROI. With your budget, mid-range finishes offer the best value.';
+  } else if (totalCost < 150000) {
+    recommendationText = 'Your budget allows for quality finishes in primary spaces. Consider premium finishes in kitchens and bathrooms, with mid-range elsewhere.';
+  } else {
+    recommendationText = 'With your premium budget, focus on architectural details and custom features that will set your property apart in the luxury market.';
+  }
+  
+  const splitRecommendation = doc.splitTextToSize(recommendationText, 150);
+  doc.text(splitRecommendation, 30, 190);
+  
+  // Add timeline estimate
+  doc.setFontSize(10);
+  doc.setTextColor(59, 130, 246); // Blue
+  doc.text('Estimated Timeline:', 30, 205);
+  
+  doc.setFontSize(9);
+  doc.setTextColor(31, 41, 55); // Dark gray
+  
+  let timelineText = '';
+  if (totalCost < 75000) {
+    timelineText = 'Estimated completion time: 2-3 months';
+  } else if (totalCost < 150000) {
+    timelineText = 'Estimated completion time: 3-5 months';
+  } else {
+    timelineText = 'Estimated completion time: 5-8 months';
+  }
+  
+  doc.text(timelineText, 30, 215);
   
   // Add footer
   doc.setFontSize(8);
-  doc.setTextColor(100, 100, 100);
-  doc.text('Renovation Cost Estimator - For planning purposes only', 105, 280, { align: 'center' });
+  doc.setTextColor(156, 163, 175); // Light gray
+  doc.text('Generated by Renovation Vision • For planning purposes only', 105, 280, { align: 'center' });
+  doc.text('Consult with a professional contractor for accurate quotes', 105, 285, { align: 'center' });
   
   // Save the PDF
   doc.save('renovation-estimate.pdf');
