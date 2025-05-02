@@ -117,7 +117,7 @@ const AIDesignPreview: React.FC<AIDesignPreviewProps> = ({ imageUrl }) => {
               disabled={isGeneratingVariation}
               className="flex justify-center items-center py-2 px-2 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isGeneratingVariating ? (
+              {isGeneratingVariation ? (
                 <RefreshCw className="h-4 w-4 mr-1 animate-spin" />
               ) : (
                 <Palette className="h-4 w-4 mr-1" />

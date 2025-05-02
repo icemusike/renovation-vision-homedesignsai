@@ -4,10 +4,11 @@ interface PDFData {
   totalCost: number;
   projectedValue: number;
   roiPercent: number;
+  selectedRooms?: string[];
 }
 
 export const generatePDF = (data: PDFData) => {
-  const { totalCost, projectedValue, roiPercent } = data;
+  const { totalCost, projectedValue, roiPercent, selectedRooms = [] } = data;
   
   // Format currency
   const formatCurrency = (value: number) => {
@@ -81,18 +82,82 @@ export const generatePDF = (data: PDFData) => {
   doc.setTextColor(16, 185, 129); // Green
   doc.text(formatCurrency(projectedValue), 170, 135, { align: 'right' });
   
+  // Add selected rooms section if rooms are selected
+  let yPos = 165;
+  
+  if (selectedRooms && selectedRooms.length > 0) {
+    doc.setFontSize(16);
+    doc.setTextColor(31, 41, 55); // Dark gray
+    doc.text('Selected Rooms for Renovation', 20, yPos);
+    
+    // Add selected rooms list
+    doc.setFontSize(10);
+    doc.setTextColor(107, 114, 128);
+    
+    yPos += 10;
+    selectedRooms.forEach((room, index) => {
+      doc.setTextColor(59, 130, 246); // Blue
+      doc.text(`• ${room}`, 30, yPos);
+      yPos += 7;
+    });
+    
+    yPos += 10;
+  }
+  
+  // Add room breakdown section
+  doc.setFontSize(16);
+  doc.setTextColor(31, 41, 55); // Dark gray
+  doc.text('Room-by-Room Breakdown', 20, yPos);
+  
+  // Add room cost table
+  const rooms = [
+    { name: 'Kitchen', percent: 25, cost: totalCost * 0.25 },
+    { name: 'Bathrooms', percent: 20, cost: totalCost * 0.20 },
+    { name: 'Living Areas', percent: 15, cost: totalCost * 0.15 },
+    { name: 'Bedrooms', percent: 15, cost: totalCost * 0.15 },
+    { name: 'Flooring', percent: 10, cost: totalCost * 0.10 },
+    { name: 'Other Areas', percent: 15, cost: totalCost * 0.15 }
+  ];
+  
+  // Table header
+  doc.setFillColor(243, 244, 246);
+  doc.rect(20, yPos + 5, 170, 10, 'F');
+  
+  doc.setFontSize(10);
+  doc.setTextColor(107, 114, 128);
+  doc.text('Room Type', 30, yPos + 12);
+  doc.text('% of Budget', 100, yPos + 12);
+  doc.text('Estimated Cost', 150, yPos + 12);
+  
+  // Table rows
+  yPos += 22;
+  rooms.forEach((room, index) => {
+    const isEven = index % 2 === 0;
+    if (!isEven) {
+      doc.setFillColor(249, 250, 251);
+      doc.rect(20, yPos - 7, 170, 10, 'F');
+    }
+    
+    doc.setTextColor(31, 41, 55);
+    doc.text(room.name, 30, yPos);
+    doc.text(`${room.percent}%`, 100, yPos);
+    doc.text(formatCurrency(room.cost), 150, yPos);
+    
+    yPos += 10;
+  });
+  
   // Add recommendations section
   doc.setFontSize(16);
   doc.setTextColor(31, 41, 55); // Dark gray
-  doc.text('AI Recommendations', 20, 165);
+  doc.text('AI Recommendations', 20, yPos + 15);
   
   // Add recommendations
   doc.setFillColor(237, 242, 255); // Light blue background
-  doc.roundedRect(20, 170, 170, 50, 3, 3, 'F');
+  doc.roundedRect(20, yPos + 20, 170, 50, 3, 3, 'F');
   
   doc.setFontSize(10);
   doc.setTextColor(59, 130, 246); // Blue
-  doc.text('Budget Optimization:', 30, 180);
+  doc.text('Budget Optimization:', 30, yPos + 30);
   
   doc.setFontSize(9);
   doc.setTextColor(31, 41, 55); // Dark gray
@@ -107,12 +172,12 @@ export const generatePDF = (data: PDFData) => {
   }
   
   const splitRecommendation = doc.splitTextToSize(recommendationText, 150);
-  doc.text(splitRecommendation, 30, 190);
+  doc.text(splitRecommendation, 30, yPos + 40);
   
   // Add timeline estimate
   doc.setFontSize(10);
   doc.setTextColor(59, 130, 246); // Blue
-  doc.text('Estimated Timeline:', 30, 205);
+  doc.text('Estimated Timeline:', 30, yPos + 55);
   
   doc.setFontSize(9);
   doc.setTextColor(31, 41, 55); // Dark gray
@@ -126,7 +191,7 @@ export const generatePDF = (data: PDFData) => {
     timelineText = 'Estimated completion time: 5-8 months';
   }
   
-  doc.text(timelineText, 30, 215);
+  doc.text(timelineText, 30, yPos + 65);
   
   // Add footer
   doc.setFontSize(8);

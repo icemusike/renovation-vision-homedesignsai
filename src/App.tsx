@@ -12,6 +12,7 @@ interface EstimationResult {
   totalCost: number;
   projectedValue: number;
   roiPercent: number;
+  selectedRooms?: string[];
 }
 
 function App() {
@@ -23,7 +24,8 @@ function App() {
   const calculateEstimation = (
     size: number,
     finishQuality: string,
-    location: string
+    location: string,
+    selectedRooms: string[] = []
   ) => {
     // Base cost per square foot based on finish quality
     const baseCostPerSqFt = {
@@ -57,6 +59,7 @@ function App() {
       totalCost,
       projectedValue,
       roiPercent,
+      selectedRooms
     });
 
     toast.success('Estimate calculated successfully!');
@@ -207,6 +210,7 @@ function App() {
                       totalCost={result.totalCost} 
                       projectedValue={result.projectedValue} 
                       roiPercent={result.roiPercent} 
+                      selectedRooms={result.selectedRooms}
                     />
                     
                     <div className="mt-6">

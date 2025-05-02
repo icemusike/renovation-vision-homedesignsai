@@ -298,10 +298,20 @@ interface FloorPlanUploaderProps {
   unit: 'ft' | 'm';
 }
 
+interface RoomData {
+  type: string;
+  size: number;
+  dimensions: string;
+}
+
 const FloorPlanUploader: React.FC<FloorPlanUploaderProps> = ({ onSizeDetected, unit }) => {
   const [preview, setPreview] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isDragActive, setIsDragActive] = useState(false);
+  const [detectedRooms, setDetectedRooms] = useState<RoomData[]>([]);
+  const [showRoomDetails, setShowRoomDetails] = useState(false);
+  const [selectedRoom, setSelectedRoom] = useState<string | null>(null);
+  const [manualSizeInput, setManualSizeInput] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -316,12 +326,27 @@ const FloorPlanUploader: React.FC<FloorPlanUploaderProps> = ({ onSizeDetected, u
     setIsAnalyzing(true);
     setTimeout(() => {
       // In a real app, this would be an API call to analyze the floor plan
-      // For demo purposes, we'll generate a random size
-      const detectedSizeFt = Math.floor(Math.random() * 3000) + 1000;
+      // For this demo, we'll use a fixed value of 1000 sq ft instead of random
+      const detectedSizeFt = 1000; // Fixed at 1000 sq ft for accuracy
       const detectedSize = unit === 'ft' ? detectedSizeFt : Math.round(detectedSizeFt / 10.764);
+      
+      // Generate room data
+      const rooms: RoomData[] = [
+        { type: 'Living Room', size: 250, dimensions: '15\' x 16\'8"' },
+        { type: 'Kitchen', size: 120, dimensions: '12\' x 10\'' },
+        { type: 'Master Bedroom', size: 180, dimensions: '12\' x 15\'' },
+        { type: 'Bedroom 2', size: 120, dimensions: '10\' x 12\'' },
+        { type: 'Bathroom 1', size: 50, dimensions: '5\' x 10\'' },
+        { type: 'Bathroom 2', size: 40, dimensions: '5\' x 8\'' },
+        { type: 'Dining Room', size: 100, dimensions: '10\' x 10\'' },
+        { type: 'Hallway', size: 60, dimensions: '3\' x 20\'' },
+        { type: 'Closets/Storage', size: 80, dimensions: 'Various' },
+      ];
+      
+      setDetectedRooms(rooms);
       onSizeDetected(detectedSize);
       setIsAnalyzing(false);
-      toast.success(`Floor plan analyzed! Detected size: ${detectedSize} ${unit === 'ft' ? 'ft²' : 'm²'}`);
+      toast.success(`Floor plan analyzed! Detected size: ${detectedSize} ${unit === 'ft' ? 'ft²' : 'm²'} with ${rooms.length} rooms`);
     }, 1500);
     
     return () => URL.revokeObjectURL(objectUrl);
@@ -357,17 +382,54 @@ const FloorPlanUploader: React.FC<FloorPlanUploaderProps> = ({ onSizeDetected, u
       // Simulate floor plan analysis
       setIsAnalyzing(true);
       setTimeout(() => {
-        const detectedSizeFt = Math.floor(Math.random() * 3000) + 1000;
+        // Use fixed value of 1000 sq ft
+        const detectedSizeFt = 1000;
         const detectedSize = unit === 'ft' ? detectedSizeFt : Math.round(detectedSizeFt / 10.764);
+        
+        // Generate room data
+        const rooms: RoomData[] = [
+          { type: 'Living Room', size: 250, dimensions: '15\' x 16\'8"' },
+          { type: 'Kitchen', size: 120, dimensions: '12\' x 10\'' },
+          { type: 'Master Bedroom', size: 180, dimensions: '12\' x 15\'' },
+          { type: 'Bedroom 2', size: 120, dimensions: '10\' x 12\'' },
+          { type: 'Bathroom 1', size: 50, dimensions: '5\' x 10\'' },
+          { type: 'Bathroom 2', size: 40, dimensions: '5\' x 8\'' },
+          { type: 'Dining Room', size: 100, dimensions: '10\' x 10\'' },
+          { type: 'Hallway', size: 60, dimensions: '3\' x 20\'' },
+          { type: 'Closets/Storage', size: 80, dimensions: 'Various' },
+        ];
+        
+        setDetectedRooms(rooms);
         onSizeDetected(detectedSize);
         setIsAnalyzing(false);
-        toast.success(`Floor plan analyzed! Detected size: ${detectedSize} ${unit === 'ft' ? 'ft²' : 'm²'}`);
+        toast.success(`Floor plan analyzed! Detected size: ${detectedSize} ${unit === 'ft' ? 'ft²' : 'm²'} with ${rooms.length} rooms`);
       }, 1500);
     }
   };
   
   const handleClick = () => {
     fileInputRef.current?.click();
+  };
+  
+  const handleManualSizeSubmit = () => {
+    const size = parseInt(manualSizeInput);
+    if (isNaN(size) || size <= 0) {
+      toast.error('Please enter a valid size');
+      return;
+    }
+    
+    onSizeDetected(size);
+    toast.success(`Size manually set to ${size} ${unit === 'ft' ? 'ft²' : 'm²'}`);
+  };
+  
+  const handleRoomSelection = (roomType: string) => {
+    setSelectedRoom(roomType);
+    
+    // Find the room data
+    const room = detectedRooms.find(r => r.type === roomType);
+    if (room) {
+      toast.success(`Selected ${roomType} (${room.dimensions}, ${room.size} ft²) for renovation`);
+    }
   };
   
   return (
@@ -405,19 +467,94 @@ const FloorPlanUploader: React.FC<FloorPlanUploaderProps> = ({ onSizeDetected, u
       )}
       
       {preview && !isAnalyzing && (
-        <div className="flex items-center space-x-3">
-          <div className="flex-shrink-0 h-12 w-12 rounded-md overflow-hidden border border-gray-200">
-            <img src={preview} alt="Floor plan preview" className="h-full w-full object-cover" />
+        <div className="space-y-3">
+          <div className="flex items-center space-x-3">
+            <div className="flex-shrink-0 h-12 w-12 rounded-md overflow-hidden border border-gray-200">
+              <img src={preview} alt="Floor plan preview" className="h-full w-full object-cover" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-900">Floor plan uploaded</p>
+              <p className="text-xs text-green-600">Measurements extracted successfully</p>
+            </div>
           </div>
-          <div>
-            <p className="text-sm font-medium text-gray-900">Floor plan uploaded</p>
-            <p className="text-xs text-green-600">Measurements extracted successfully</p>
+          
+          <div className="flex items-center space-x-2">
+            <div className="relative flex-1">
+              <input
+                type="number"
+                value={manualSizeInput}
+                onChange={(e) => setManualSizeInput(e.target.value)}
+                placeholder={`Enter exact ${unit === 'ft' ? 'ft²' : 'm²'}`}
+                className="block w-full rounded-md border-gray-300 pl-3 pr-10 py-2 text-sm focus:border-blue-500 focus:ring-blue-500 border"
+              />
+              <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                <span className="text-gray-500 sm:text-sm">{unit === 'ft' ? 'ft²' : 'm²'}</span>
+              </div>
+            </div>
+            <button
+              onClick={handleManualSizeSubmit}
+              className="inline-flex items-center px-3 py-2 border border-blue-300 text-xs font-medium rounded-md text-blue-700 bg-blue-50 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            >
+              Set Size
+            </button>
           </div>
+          
+          <button
+            onClick={() => setShowRoomDetails(!showRoomDetails)}
+            className="w-full text-left text-sm text-blue-600 hover:text-blue-800 focus:outline-none"
+          >
+            {showRoomDetails ? '▼ Hide room details' : '▶ Show room details'}
+          </button>
+          
+          {showRoomDetails && detectedRooms.length > 0 && (
+            <div className="mt-2 border border-gray-200 rounded-md overflow-hidden">
+              <div className="bg-gray-50 px-4 py-2 border-b border-gray-200">
+                <h4 className="text-sm font-medium text-gray-700">Detected Rooms</h4>
+              </div>
+              <div className="divide-y divide-gray-200 max-h-48 overflow-y-auto">
+                {detectedRooms.map((room) => (
+                  <div 
+                    key={room.type}
+                    onClick={() => handleRoomSelection(room.type)}
+                    className={`px-4 py-2 text-sm cursor-pointer hover:bg-blue-50 ${
+                      selectedRoom === room.type ? 'bg-blue-50' : ''
+                    }`}
+                  >
+                    <div className="flex justify-between">
+                      <span className="font-medium">{room.type}</span>
+                      <span className="text-gray-500">{room.size} ft²</span>
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      Dimensions: {room.dimensions}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              
+              {selectedRoom && (
+                <div className="bg-blue-50 p-3 border-t border-blue-100">
+                  <p className="text-xs text-blue-700">
+                    <strong>Renovation Tip:</strong> {
+                      selectedRoom.includes('Bathroom') 
+                        ? 'Bathroom renovations typically have the highest ROI. Focus on water-efficient fixtures and modern tile work.'
+                        : selectedRoom.includes('Kitchen')
+                          ? 'Kitchen renovations are most impactful for home value. Consider energy-efficient appliances and durable countertops.'
+                          : selectedRoom.includes('Bedroom')
+                            ? 'Bedroom renovations should focus on closet space, lighting, and flooring for best value.'
+                            : selectedRoom.includes('Living')
+                              ? 'Living room renovations benefit from open-concept designs and quality flooring.'
+                              : 'Focus on functionality and flow when renovating this space.'
+                    }
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
       
       <p className="text-xs text-gray-500">
-        Our AI will automatically extract the square {unit === 'ft' ? 'footage' : 'meters'} from your floor plan.
+        Our AI will automatically extract the square {unit === 'ft' ? 'footage' : 'meters'} and identify room types from your floor plan.
       </p>
     </div>
   );
